@@ -154,6 +154,11 @@ export default function Interface() {
         textColor = '#58B02E';
     }
 
+    // apagar tudo do exibir produtos
+    const limparTudo = () => {
+        setProdutos([]);
+    };
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <ScrollView style={styles.scrollView}>
@@ -209,7 +214,7 @@ export default function Interface() {
                                     <Image source={require('../assets/vetorVerLista.png')} style={styles.imgRecursos} />
                                     <Text style={styles.modalTextRecursos}>Ver Listas</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
+                                <TouchableOpacity style={styles.botaoRecursos} onPress={() => {limparTudo(); toggleModalRecursos()}}>
                                     <Image source={require('../assets/vetorLimparTudo.png')} style={styles.imgRecursos} />
                                     <Text style={styles.modalTextRecursos}>Limpar Tudo</Text>
                                 </TouchableOpacity>
