@@ -159,6 +159,15 @@ export default function Interface() {
         setProdutos([]);
     };
 
+    // lógica para colocar reticências quando for muito grande o nome
+    const reticencias = (name) => {
+        if (name.length > 8) {
+            return name.substring(0, 8) + '...';
+        } else {
+            return name
+        }
+    }
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <ScrollView style={styles.scrollView}>
@@ -214,7 +223,7 @@ export default function Interface() {
                                     <Image source={require('../assets/vetorVerLista.png')} style={styles.imgRecursos} />
                                     <Text style={styles.modalTextRecursos}>Ver Listas</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.botaoRecursos} onPress={() => {limparTudo(); toggleModalRecursos()}}>
+                                <TouchableOpacity style={styles.botaoRecursos} onPress={() => { limparTudo(); toggleModalRecursos() }}>
                                     <Image source={require('../assets/vetorLimparTudo.png')} style={styles.imgRecursos} />
                                     <Text style={styles.modalTextRecursos}>Limpar Tudo</Text>
                                 </TouchableOpacity>
@@ -287,9 +296,9 @@ export default function Interface() {
                                         <Image source={imagemMap[produto.imagem]} style={styles.imgProdutos} />
                                         <View style={styles.boxProdutos}>
                                             <TouchableOpacity onPress={() => removerProduto(index)} style={{ backgroundColor: 'transparent' }}>
-                                                <Icon name="trash" size={25} color="red" style={{ marginBottom: 5 }} />
+                                                <Image source={require('../assets/iconeLixeira.png')} style={styles.icone} />
                                             </TouchableOpacity>
-                                            <Text style={styles.nomeProduto}>{produto.nome}</Text>
+                                            <Text style={styles.nomeProduto}>{reticencias(produto.nome)}</Text>
                                             <Text style={styles.preco}>R$ {(produto.precoUnitario * produto.quantidade).toFixed(2)}</Text>
                                             <View style={styles.boxQuantidade}>
                                                 <TouchableOpacity onPress={() => decrementarQuantidade(index)} style={styles.circuloQuantidade}>
@@ -462,7 +471,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        marginBottom: 20,
+        marginBottom: 25,
         marginRight: 40
     },
     iconePlus: {
@@ -533,17 +542,27 @@ const styles = StyleSheet.create({
     },
     // exibição dos cards
     scrollExibicao: {
-    },
-    tudo: {
+        minWidth: 216,
+        // height: 310,
+        // marginBottom: 25
     },
     produtosContainer: {
         flexDirection: 'row',
-        marginBottom: 25,
+        borderRadius: 10,
     },
     containerProdutos: {
+        marginRight: 40,
+        alignItems: 'center'
+    },
+    boxProdutos: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: 10,
+        marginTop: -35,
+        paddingTop: 20,
+        paddingRight: 20,
+        paddingLeft: 20,
+        paddingBottom: 20,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
         shadowColor: '#305BCC',
         shadowOffset: {
             width: 0,
@@ -552,34 +571,32 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        marginRight: 50,
     },
     imgProdutos: {
-        width: 150,
-        height: 150,
-        borderRadius: 20,
-        alignSelf: 'center',
-        marginBottom: 10,
+        width: 160,
+        height: 160,
+        zIndex: 22,
     },
-    boxProdutos: {
-        backgroundColor: '#F5F5F5',
-        borderRadius: 20,
-        padding: 10,
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    icone: {
+        width: 35,
+        height: 35,
+        marginLeft: -15,
+        marginTop: -5
     },
     nomeProduto: {
         fontFamily: 'Raleway',
         fontWeight: '700',
         fontSize: 18,
-        marginBottom: 5
+        marginBottom: 0,
+        marginLeft: 25
     },
     preco: {
         fontFamily: 'Raleway',
         fontWeight: '600',
         fontSize: 16,
-        marginBottom: 10
+        marginBottom: 10,
+        marginLeft: 25,
+        width: 110,
     },
     boxQuantidade: {
         flexDirection: 'row',
@@ -588,7 +605,8 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 5,
         alignSelf: 'center',
-        marginTop: 5
+        marginTop: 5,
+        marginLeft: '6%'
     },
     circuloQuantidade: {
         width: 30,
