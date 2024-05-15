@@ -1,15 +1,18 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-export default function ListasCriadas({ route }) {
-    const { nomeLista } = route.params; // Obtendo o nome da lista dos parâmetros de navegação
+export default function ListasCriadas() {
+
+const navigation=useNavigation()
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.botao}>
-                <Text style={styles.textoBotao}>{nomeLista}</Text> {/* Botão com o nome da lista */}
+            <Text>Listas Criadas</Text>
+            <TouchableOpacity style={{borderWidth:2}} onPress={() => navigation.navigate('index')}>
+                <Text>Acessar</Text>
             </TouchableOpacity>
-            {/* Outros componentes da tela listasCriadas */}
+            <StatusBar style="auto" />
         </View>
     );
 }
@@ -17,17 +20,8 @@ export default function ListasCriadas({ route }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        backgroundColor: '#fff',
         alignItems: 'center',
-    },
-    botao: {
-        backgroundColor: 'blue',
-        padding: 10,
-        borderRadius: 5,
-        marginTop: 10,
-    },
-    textoBotao: {
-        color: 'white',
-        fontSize: 18,
+        justifyContent: 'center',
     },
 });

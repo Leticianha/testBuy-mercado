@@ -1,59 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Modal, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, ScrollView, Text, View, Image, TextInput, TouchableOpacity, Modal } from 'react-native';
+import * as Animatable from 'react-native-animatable';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { Ionicons } from '@expo/vector-icons/'
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useNavigation } from '@react-navigation/native';
 import img1 from '../assets/img1.png';
 import img2 from '../assets/img2.png';
 import img3 from '../assets/img3.png';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts } from 'expo-font';
-import * as Animatable from 'react-native-animatable';
-import { Ionicons } from '@expo/vector-icons/'
-import { FlatList } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
+SplashScreen.preventAutoHideAsync();
 
 export default function Interface() {
+    const [valorAlvo, setValorAlvo] = useState('R$ '); // Inicializa com "R$ "
+    const [mostrarModalRecursos, setMostrarModalRecursos] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [nome, setNome] = useState('');
     const [precoUnitario, setPrecoUnitario] = useState('');
     const [quantidade, setQuantidade] = useState('');
-    const [valorAlvo, setValorAlvo] = useState('R$ '); // Inicializa com "R$ "
-    const [errorMessage, setErrorMessage] = useState('');
-    const [produtos, setProdutos] = useState([]);
     const [imgIndex, setImgIndex] = useState(1);
-    const [mostrarModalProdutosSalvos, setMostrarModalProdutosSalvos] = useState(false);
-    const [nomeLista, setNomeLista] = useState(''); // Estado para o nome da lista
-    const navigation = useNavigation()
-    const [view, setView] = useState(null);
-    const [mostrarModalRecursos, setMostrarModalRecursos] = useState(false);
+    const [produtos, setProdutos] = useState([]);
 
-    useFonts({ 'Raleway': require('../assets/fonts/Raleway-VariableFont_wght.ttf') });
+    // navegar entra as páginas
+    const navigation=useNavigation()
 
-    useEffect(() => {
-        const loadView = async () => {
-            try {
-                const savedView = await AsyncStorage.getItem('savedView');
-                if (savedView !== null) {
-                    setView(JSON.parse(savedView));
-                }
-            } catch (error) {
-                console.error('Erro ao carregar a view salva:', error);
-            }
-        };
-        loadView();
-    }, []);
+    // fonte
+    const [fontsLoaded, fontError] = useFonts({
+        'Raleway': require('../assets/fonts/Raleway-VariableFont_wght.ttf'),
+    });
 
-    useEffect(() => {
-        const saveView = async () => {
-            try {
-                await AsyncStorage.setItem('savedView', JSON.stringify(view));
-            } catch (error) {
-                console.error('Erro ao salvar a view:', error);
-            }
-        };
-        saveView();
-    }, [view]);
+    const onLayoutRootView = useCallback(async () => {
+        if (fontsLoaded || fontError) {
+            await SplashScreen.hideAsync();
+        }
+    }, [fontsLoaded, fontError]);
 
+    if (!fontsLoaded && !fontError) {
+        return null;
+    }
+
+    // valor alvo - deixar fixo o R$
+    const handleChangeText = (text) => {
+        if (!text.startsWith('R$')) {
+            setValorAlvo('R$ ' + text);
+        } else {
+            setValorAlvo(text);
+        }
+    };
+
+    // Função para abrir o modal de recursos
+    const toggleModalRecursos = () => {
+        setMostrarModalRecursos(!mostrarModalRecursos);
+    };
+
+    // Função para fechar o modal de recursos
+    const fecharModalRecursos = () => {
+        setMostrarModalRecursos(false);
+    };
+
+    // função de salvar e verifir os valor do valor alvo e modal
     const handleSalvar = () => {
         if (!nome || !precoUnitario || !quantidade || !valorAlvo) {
             setErrorMessage('Todos os campos são obrigatórios.');
@@ -85,6 +93,46 @@ export default function Interface() {
         setModalVisible(false);
     };
 
+    // remover produto da exibição cards
+    const removerProduto = (index) => {
+        const novosProdutos = [...produtos];
+        novosProdutos.splice(index, 1);
+        setProdutos(novosProdutos);
+    };
+
+    // aumentar uma quantidade do produto da exibição cards
+    const incrementarQuantidade = (index) => {
+        const novosProdutos = [...produtos];
+        novosProdutos[index].quantidade += 1;
+        setProdutos(novosProdutos);
+    };
+
+    // diminuir uma quantidade do produto da exibição cards
+    const decrementarQuantidade = (index) => {
+        const novosProdutos = [...produtos];
+        if (novosProdutos[index].quantidade > 1) {
+            novosProdutos[index].quantidade -= 1;
+            setProdutos(novosProdutos);
+        }
+    };
+
+    // fechar modal de infos do produto
+    const fecharModalInfos = () => {
+        setModalVisible(false);
+        setNome('');
+        setPrecoUnitario('');
+        setQuantidade('');
+        setErrorMessage('');
+    };
+
+    // exibição dos cards
+    const imagemMap = {
+        'img1.png': img1,
+        'img2.png': img2,
+        'img3.png': img3,
+    };
+
+    // valor total
     const valorTotal = produtos.reduce((total, produto) => {
         return total + (produto.precoUnitario * produto.quantidade);
     }, 0);
@@ -105,82 +153,15 @@ export default function Interface() {
         textColor = '#58B02E';
     }
 
-    const removerProduto = (index) => {
-        const novosProdutos = [...produtos];
-        novosProdutos.splice(index, 1);
-        setProdutos(novosProdutos);
-    };
-
-    const incrementarQuantidade = (index) => {
-        const novosProdutos = [...produtos];
-        novosProdutos[index].quantidade += 1;
-        setProdutos(novosProdutos);
-    };
-
-    const decrementarQuantidade = (index) => {
-        const novosProdutos = [...produtos];
-        if (novosProdutos[index].quantidade > 1) {
-            novosProdutos[index].quantidade -= 1;
-            setProdutos(novosProdutos);
-        }
-    };
-
-    const imagemMap = {
-        'img1.png': img1,
-        'img2.png': img2,
-        'img3.png': img3,
-    };
-
-    const salvarCards = async () => {
-        try {
-            await AsyncStorage.setItem('produtos', JSON.stringify(produtos));
-            setMostrarModalProdutosSalvos(true);
-            console.log('Produtos salvos:', produtos);
-        } catch (error) {
-            console.error('Erro ao salvar produtos:', error);
-        }
-    };
-
-    const fecharModalProdutosSalvos = () => {
-        setMostrarModalProdutosSalvos(false);
-    };
-
-    const irParaListasCriadas = () => {
-        setMostrarModalProdutosSalvos(false);
-        navigation.navigate('listasCriadas', { nomeLista }); // Passando o nome da lista como parâmetro
-    };
-
-
-    const limparTudo = () => {
-        setProdutos([]);
-    };
-
-    const handleChangeText = (text) => {
-        // Adicione "R$" se o texto não começar com "R$"
-        if (!text.startsWith('R$')) {
-            setValorAlvo('R$ ' + text);
-        } else {
-            setValorAlvo(text);
-        }
-    };
-
-    // Função para abrir e fechar o modal de recursos
-    const toggleModalRecursos = () => {
-        setMostrarModalRecursos(!mostrarModalRecursos);
-    };
-
-    // Função para fechar o modal de recursos
-    const fecharModalRecursos = () => {
-        setMostrarModalRecursos(false);
-    };
-
     return (
-        <ScrollView style={styles.scrollViewTudo}>
-            <Animatable.View delay={600} animation='fadeInUp' style={styles.container}>
+        <ScrollView style={styles.scrollView}>
+            <Animatable.View delay={600} animation='fadeInUp' style={styles.container} onLayout={onLayoutRootView}>
                 {/* header */}
                 <View style={styles.header}>
                     <Text style={styles.usuario}>Olá, usuário</Text>
-                    <Image source={require('../assets/logoComFundo.png')} style={styles.logo} />
+                    <View style={styles.logoContainer}>
+                        <Image source={require('../assets/logoComFundo.png')} style={styles.logo} />
+                    </View>
                 </View>
 
                 {/* valor alvo */}
@@ -204,6 +185,37 @@ export default function Interface() {
                     </TouchableOpacity>
                 </View>
 
+                {/* modal recursos */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={mostrarModalRecursos}
+                    onRequestClose={fecharModalRecursos}
+                >
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                        <View style={styles.contarinerRecursos}>
+                            <Text style={styles.textRecursos}>Recursos</Text>
+                            <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
+                                <Image source={require('../assets/vetorSalvarCards.png')} style={styles.imgRecursos} />
+                                <Text style={styles.modalTextRecursos}>Salvar Cards</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.botaoRecursos} onPress={() => {navigation.navigate('produtosAdicionados'); toggleModalRecursos()}}>
+                                <Image source={require('../assets/vetorVerCards.png')} style={styles.imgRecursos} />
+                                <Text style={styles.modalTextRecursos}>Ver Cards</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.botaoRecursos} onPress={() => {navigation.navigate('listasCriadas'); toggleModalRecursos()}}>
+                                <Image source={require('../assets/vetorVerLista.png')} style={styles.imgRecursos} />
+                                <Text style={styles.modalTextRecursos}>Ver Listas</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
+                                <Image source={require('../assets/vetorLimparTudo.png')} style={styles.imgRecursos} />
+                                <Text style={styles.modalTextRecursos}>Limpar Tudo</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* botao adicionar */}
                 <TouchableOpacity style={styles.botaoAdicionar} onPress={() => {
                     if (valorAlvo === 'R$ ') {
                         alert('Por favor, insira o valor alvo antes de adicionar um produto.');
@@ -212,13 +224,56 @@ export default function Interface() {
                     }
                 }}>
                     <Ionicons name="add-outline" style={[styles.iconePlus, { color: '#ED2D28' }]} />
-                    <Text style={styles.textBotaoAdd}>Adicionar Produto</Text>
+                    <Text style={styles.textBotaoAdd}>Adicionar produto</Text>
                 </TouchableOpacity>
 
+                {/* mensagem de nenhum produto adicionando */}
                 {produtos.length === 0 && <Text style={styles.textNenhumProduto}>Nenhum produto adicionado</Text>}
 
+                {/* modal infos produtos */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => {
+                        fecharModalInfos
+                    }}
+                    style={{ zIndex: 2 }}
+                >
+                    <View style={styles.modalInfosProdutos}>
+                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                        <TouchableOpacity onPress={fecharModalInfos}>
+                            <Ionicons name="close-circle-outline" style={[styles.iconePlus, { color: '#305BCC', marginLeft: '81%' }]} />
+                        </TouchableOpacity>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nome"
+                            onChangeText={setNome}
+                            value={nome}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Preço Unitário"
+                            keyboardType="numeric"
+                            onChangeText={setPrecoUnitario}
+                            value={precoUnitario}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Quantidade"
+                            keyboardType="numeric"
+                            onChangeText={setQuantidade}
+                            value={quantidade}
+                        />
+                        <TouchableOpacity onPress={handleSalvar}>
+                            <Text style={styles.buttonText}>Adicionar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
+
+                {/* exibição dos cards */}
                 <View style={styles.tudo}>
-                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollView}>
+                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollExibicao}>
                         <View style={styles.produtosContainer}>
                             {produtos.map((produto, index) => (
                                 <View key={index} style={styles.containerProdutos}>
@@ -245,6 +300,7 @@ export default function Interface() {
                     </ScrollView>
                 </View>
 
+                {/* gastos */}
                 <View style={styles.containerGastos}>
                     <Text style={styles.textGastos}>Gastos - </Text>
                     <Text style={[
@@ -260,106 +316,20 @@ export default function Interface() {
                     {mensagem}
                     {valorTotal === parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && "Valor alcançado"}
                 </Text>
-
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => {
-                        setModalVisible(false);
-                    }}
-                    style={{ zIndex: 2 }}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Nome"
-                                onChangeText={setNome}
-                                value={nome}
-                            />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Preço Unitário"
-                                keyboardType="numeric"
-                                onChangeText={setPrecoUnitario}
-                                value={precoUnitario}
-                            />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Quantidade"
-                                keyboardType="numeric"
-                                onChangeText={setQuantidade}
-                                value={quantidade}
-                            />
-                            <TouchableOpacity onPress={handleSalvar}>
-                                <Text style={styles.buttonText}>Salvar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={mostrarModalProdutosSalvos}
-                    onRequestClose={fecharModalProdutosSalvos}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalHeaderText}>Digite o nome da lista:</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Nome da Lista"
-                                onChangeText={setNomeLista}
-                                value={nomeLista}
-                            />
-                            <Text>Cards Salvos</Text>
-                            <TouchableOpacity onPress={irParaListasCriadas}> {/* Alterado para chamar a função irParaListasCriadas */}
-                                <Text>Ok</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={mostrarModalRecursos}
-                    onRequestClose={fecharModalRecursos}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <TouchableOpacity onPress={() => { fecharModalRecursos() }}>x</TouchableOpacity>
-                            <TouchableOpacity onPress={() => { salvarCards(); fecharModalRecursos(); }} style={styles.botao}>
-                                <Text style={styles.textoBotao}>Salvar Cards</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => { navigation.navigate('produtosAdicionados'); fecharModalRecursos(); }} style={styles.botao}>
-                                <Text style={styles.textoBotao}>Ver cards</Text>
-                            </TouchableOpacity>
-                            <Text onPress={() => { limparTudo(); fecharModalRecursos(); }} style={[styles.limparTudoBotao, { color: 'blue' }]}>Limpar tudo</Text>
-                            <Text style={[styles.limparTudoBotao, { color: 'blue' }]}>Ver listas</Text>
-                        </View>
-                    </View>
-                </Modal>
-
-                {view}
+                <StatusBar style="auto" />
             </Animatable.View>
         </ScrollView>
-
     );
 }
 
 const styles = StyleSheet.create({
-    // tudo
-    scrollViewTudo: {
+    scrollView: {
         backgroundColor: '#F5F5F5',
-        height: 50
+        minHeight: 100,
     },
     container: {
         flex: 1,
-        marginLeft: 50,
+        marginLeft: 40,
         marginTop: 40
     },
     // header
@@ -367,16 +337,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginRight: 50
+        marginRight: 40
     },
     usuario: {
         fontFamily: 'Raleway',
-        fontWeight: '600',
+        fontWeight: '700',
         fontSize: 22,
     },
-    logo: {
-        width: 110,
-        height: 60,
+    logoContainer: {
         shadowColor: '#305BCC',
         shadowOffset: {
             width: 0,
@@ -385,6 +353,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+    },
+    logo: {
+        width: 110,
+        height: 60,
     },
     // valor alvo
     textValorAlvo: {
@@ -399,7 +371,7 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 20,
         marginBottom: 40,
-        marginRight: 50
+        marginRight: 40
     },
     textInsira: {
         fontFamily: 'Raleway',
@@ -422,7 +394,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 15,
-        marginRight: 50
+        marginRight: 40,
     },
     textCards: {
         fontFamily: 'Raleway',
@@ -435,6 +407,38 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35
     },
+    // modal recursos
+    textRecursos: {
+        fontFamily: 'Raleway',
+        fontWeight: '700',
+        fontSize: 22,
+        marginBottom: 20
+    },
+    contarinerRecursos: {
+        backgroundColor: '#fff',
+        padding: 30,
+        borderRadius: 40,
+        width: 250,
+        position: 'absolute',
+        right: 50,
+        top: 50,
+    },
+    botaoRecursos: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10
+    },
+    modalTextRecursos: {
+        fontFamily: 'Raleway',
+        fontSize: 18,
+        fontWeight: '600'
+    },
+    imgRecursos: {
+        width: 40,
+        height: 40,
+        marginRight: 10
+    },
+    // botao adicionar
     botaoAdicionar: {
         flexDirection: 'row',
         justifyContent: 'space-evenly',
@@ -450,106 +454,148 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        marginRight: 50
+        marginBottom: 20,
+        marginRight: 40
     },
     iconePlus: {
-        fontSize: 30
+        marginRight: 10,
+        marginBottom: 2,
+        fontSize: 35
     },
     textBotaoAdd: {
         fontFamily: 'Raleway',
+        fontWeight: '600',
         fontSize: 18,
-        fontWeight: '500'
+        color: '#305BCC'
     },
+    // nenhum produto adicionado
     textNenhumProduto: {
         fontFamily: 'Raleway',
+        fontSize: 18,
         fontWeight: '600',
-        fontSize: 16,
+        color: '#FF0000',
+        alignItems: 'center',
+        justifyContent: 'center',
         textAlign: 'center',
-        marginTop: 60,
-        marginBottom: 30,
-        marginRight: 50
+        marginRight: 40,
+        height: 200,
+        paddingTop: '25%'
+    },
+    // modal infos produtos
+    modalInfosProdutos: {
+        backgroundColor: '#F5F5F5',
+        padding: 40,
+        borderRadius: 40,
+        width: '80%',
+        position: 'absolute',
+        top: '30%',
+        left: '10%',
+        zIndex: 2,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    errorText: {
+        color: 'red',
+        marginBottom: 10,
+        textAlign: 'center',
     },
     input: {
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
+        fontFamily: 'Raleway',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
         padding: 10,
-        marginBottom: 10,
-        width: 200,
+        marginBottom: 15,
+        fontSize: 18,
     },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+    buttonText: {
+        fontFamily: 'Raleway',
+        backgroundColor: '#305BCC',
+        borderRadius: 15,
+        padding: 10,
+        color: '#FFFFFF',
+        fontSize: 20,
+        fontWeight: '500',
+        textAlign: 'center'
     },
-    modalContent: {
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 10,
+    // exibição dos cards
+    scrollExibicao: {
     },
-    // cards exibidos
     tudo: {
-        flexDirection: 'row',
-        width: '100%',
-        marginBottom: 10,
-        marginTop: 10
     },
     produtosContainer: {
         flexDirection: 'row',
-        minHeight: 10
+        marginBottom: 25,
     },
     containerProdutos: {
-        alignItems: 'center',
-        marginBottom: 20,
-        minHeight: 10,
-        marginLeft: 50,
-        marginRight: 10,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 10,
+        shadowColor: '#305BCC',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+        marginRight: 50,
     },
     imgProdutos: {
-        width: 140,
-        height: 140,
-        zIndex: 1,
-        position: 'absolute',
-        top: 5,
+        width: 150,
+        height: 150,
+        borderRadius: 20,
+        alignSelf: 'center',
+        marginBottom: 10,
     },
     boxProdutos: {
-        backgroundColor: '#fff',
-        width: 195,
-        padding: 16,
-        minHeight: 155,
-        borderBottomLeftRadius: 40,
-        borderBottomRightRadius: 40,
-        shadowColor: '#1C36B6',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-        marginTop: 104
+        backgroundColor: '#F5F5F5',
+        borderRadius: 20,
+        padding: 10,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     nomeProduto: {
-        fontSize: 25,
+        fontFamily: 'Raleway',
+        fontWeight: '700',
+        fontSize: 18,
+        marginBottom: 5
     },
     preco: {
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 10,
+        fontFamily: 'Raleway',
+        fontWeight: '600',
+        fontSize: 16,
+        marginBottom: 10
     },
     boxQuantidade: {
         flexDirection: 'row',
-        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        backgroundColor: '#305BCC',
+        borderRadius: 20,
+        padding: 5,
+        alignSelf: 'center',
+        marginTop: 5
     },
     circuloQuantidade: {
-        backgroundColor: '#EB2F23',
-        padding: 5,
-        borderRadius: 30,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: '#ED2D28',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 5
     },
     textQuantidade: {
-        fontSize: 20,
-    },
-    scrollView: {
-        minHeight: 10,
-        overflow: 'hidden',
+        fontFamily: 'Raleway',
+        fontWeight: '600',
+        fontSize: 16,
+        color: '#FFFFFF'
     },
     // gastos
     containerGastos: {
@@ -574,37 +620,5 @@ const styles = StyleSheet.create({
         marginRight: 50,
         marginTop: 20,
         marginBottom: 30
-    },
-    // modal
-    labelText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginRight: 5,
-    },
-    errorText: {
-        fontFamily: 'Raleway',
-        fontSize: 15,
-        color: '#EB2F23',
-        fontWeight: '600',
-        margin: 10
-    },
-    salvarBotao: {
-        fontSize: 18,
-        marginBottom: 10,
-    },
-    modalHeaderText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    modalText: {
-        fontSize: 18,
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    limparTudoBotao: {
-        fontSize: 18,
-        marginBottom: 10,
     },
 });

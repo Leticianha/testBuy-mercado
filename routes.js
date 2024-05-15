@@ -10,20 +10,21 @@ export default function Routes() {
         <Stack.Navigator>
             <Stack.Screen
                 name="index"
-                component={Interface}       
-                options={{ headerShown: false }}          
-                 />
+                component={Interface}
+                options={{ headerShown: false }}
+            />
 
             <Stack.Screen
                 name="produtosAdicionados"
-                component={Cards}     
-                options={{ headerShown: false }}             
-                />
+                component={Cards}
+                options={{ headerShown: false }}
+            />
+
             <Stack.Screen
                 name="listasCriadas"
-                component={ListasCriadas}     
-                options={{ headerShown: false }}             
-                />
+                component={ListasCriadas}
+                options={{ headerShown: false }}
+            />
         </Stack.Navigator>
-        )
+    )
 } 
