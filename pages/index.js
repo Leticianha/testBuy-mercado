@@ -10,6 +10,7 @@ import img1 from '../assets/img1.png';
 import img2 from '../assets/img2.png';
 import img3 from '../assets/img3.png';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,7 +26,7 @@ export default function Interface() {
     const [produtos, setProdutos] = useState([]);
 
     // navegar entra as páginas
-    const navigation=useNavigation()
+    const navigation = useNavigation()
 
     // fonte
     const [fontsLoaded, fontError] = useFonts({
@@ -154,171 +155,173 @@ export default function Interface() {
     }
 
     return (
-        <ScrollView style={styles.scrollView}>
-            <Animatable.View delay={600} animation='fadeInUp' style={styles.container} onLayout={onLayoutRootView}>
-                {/* header */}
-                <View style={styles.header}>
-                    <Text style={styles.usuario}>Olá, usuário</Text>
-                    <View style={styles.logoContainer}>
-                        <Image source={require('../assets/logoComFundo.png')} style={styles.logo} />
-                    </View>
-                </View>
-
-                {/* valor alvo */}
-                <Text style={styles.textValorAlvo}>Valor</Text>
-                <View style={styles.containerValorAlvo}>
-                    <Text style={styles.textInsira}>Insira o valor alvo</Text>
-                    <TextInput
-                        style={styles.inputValorAlvo}
-                        placeholder="R$ 0,00"
-                        keyboardType="numeric"
-                        onChangeText={handleChangeText}
-                        value={valorAlvo}
-                    />
-                </View>
-
-                {/* cards */}
-                <View style={styles.containerCards}>
-                    <Text style={styles.textCards}>Cards</Text>
-                    <TouchableOpacity onPress={toggleModalRecursos}>
-                        <Image source={require('../assets/menuTresPontos.png')} style={styles.imgRecursos} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* modal recursos */}
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={mostrarModalRecursos}
-                    onRequestClose={fecharModalRecursos}
-                >
-                    <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                        <View style={styles.contarinerRecursos}>
-                            <Text style={styles.textRecursos}>Recursos</Text>
-                            <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
-                                <Image source={require('../assets/vetorSalvarCards.png')} style={styles.imgRecursos} />
-                                <Text style={styles.modalTextRecursos}>Salvar Cards</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.botaoRecursos} onPress={() => {navigation.navigate('produtosAdicionados'); toggleModalRecursos()}}>
-                                <Image source={require('../assets/vetorVerCards.png')} style={styles.imgRecursos} />
-                                <Text style={styles.modalTextRecursos}>Ver Cards</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.botaoRecursos} onPress={() => {navigation.navigate('listasCriadas'); toggleModalRecursos()}}>
-                                <Image source={require('../assets/vetorVerLista.png')} style={styles.imgRecursos} />
-                                <Text style={styles.modalTextRecursos}>Ver Listas</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
-                                <Image source={require('../assets/vetorLimparTudo.png')} style={styles.imgRecursos} />
-                                <Text style={styles.modalTextRecursos}>Limpar Tudo</Text>
-                            </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ScrollView style={styles.scrollView}>
+                <Animatable.View delay={600} animation='fadeInUp' style={styles.container} onLayout={onLayoutRootView}>
+                    {/* header */}
+                    <View style={styles.header}>
+                        <Text style={styles.usuario}>Olá, usuário</Text>
+                        <View style={styles.logoContainer}>
+                            <Image source={require('../assets/logoComFundo.png')} style={styles.logo} />
                         </View>
                     </View>
-                </Modal>
 
-                {/* botao adicionar */}
-                <TouchableOpacity style={styles.botaoAdicionar} onPress={() => {
-                    if (valorAlvo === 'R$ ') {
-                        alert('Por favor, insira o valor alvo antes de adicionar um produto.');
-                    } else {
-                        setModalVisible(true);
-                    }
-                }}>
-                    <Ionicons name="add-outline" style={[styles.iconePlus, { color: '#ED2D28' }]} />
-                    <Text style={styles.textBotaoAdd}>Adicionar produto</Text>
-                </TouchableOpacity>
-
-                {/* mensagem de nenhum produto adicionando */}
-                {produtos.length === 0 && <Text style={styles.textNenhumProduto}>Nenhum produto adicionado</Text>}
-
-                {/* modal infos produtos */}
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => {
-                        fecharModalInfos
-                    }}
-                    style={{ zIndex: 2 }}
-                >
-                    <View style={styles.modalInfosProdutos}>
-                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-                        <TouchableOpacity onPress={fecharModalInfos}>
-                            <Ionicons name="close-circle-outline" style={[styles.iconePlus, { color: '#305BCC', marginLeft: '81%' }]} />
-                        </TouchableOpacity>
+                    {/* valor alvo */}
+                    <Text style={styles.textValorAlvo}>Valor</Text>
+                    <View style={styles.containerValorAlvo}>
+                        <Text style={styles.textInsira}>Insira o valor alvo</Text>
                         <TextInput
-                            style={styles.input}
-                            placeholder="Nome"
-                            onChangeText={setNome}
-                            value={nome}
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Preço Unitário"
+                            style={styles.inputValorAlvo}
+                            placeholder="R$ 0,00"
                             keyboardType="numeric"
-                            onChangeText={setPrecoUnitario}
-                            value={precoUnitario}
+                            onChangeText={handleChangeText}
+                            value={valorAlvo}
                         />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Quantidade"
-                            keyboardType="numeric"
-                            onChangeText={setQuantidade}
-                            value={quantidade}
-                        />
-                        <TouchableOpacity onPress={handleSalvar}>
-                            <Text style={styles.buttonText}>Adicionar</Text>
+                    </View>
+
+                    {/* cards */}
+                    <View style={styles.containerCards}>
+                        <Text style={styles.textCards}>Cards</Text>
+                        <TouchableOpacity onPress={toggleModalRecursos}>
+                            <Image source={require('../assets/menuTresPontos.png')} style={styles.imgRecursos} />
                         </TouchableOpacity>
                     </View>
-                </Modal>
 
-                {/* exibição dos cards */}
-                <View style={styles.tudo}>
-                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollExibicao}>
-                        <View style={styles.produtosContainer}>
-                            {produtos.map((produto, index) => (
-                                <View key={index} style={styles.containerProdutos}>
-                                    <Image source={imagemMap[produto.imagem]} style={styles.imgProdutos} />
-                                    <View style={styles.boxProdutos}>
-                                        <TouchableOpacity onPress={() => removerProduto(index)} style={{ backgroundColor: 'transparent' }}>
-                                            <Icon name="trash" size={25} color="red" style={{ marginBottom: 5 }} />
-                                        </TouchableOpacity>
-                                        <Text style={styles.nomeProduto}>{produto.nome}</Text>
-                                        <Text style={styles.preco}>R$ {(produto.precoUnitario * produto.quantidade).toFixed(2)}</Text>
-                                        <View style={styles.boxQuantidade}>
-                                            <TouchableOpacity onPress={() => decrementarQuantidade(index)} style={styles.circuloQuantidade}>
-                                                <Icon name="minus" size={20} color="white" />
+                    {/* modal recursos */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={mostrarModalRecursos}
+                        onRequestClose={fecharModalRecursos}
+                    >
+                        <View style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                            <View style={styles.contarinerRecursos}>
+                                <Text style={styles.textRecursos}>Recursos</Text>
+                                <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
+                                    <Image source={require('../assets/vetorSalvarCards.png')} style={styles.imgRecursos} />
+                                    <Text style={styles.modalTextRecursos}>Salvar Cards</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.botaoRecursos} onPress={() => { navigation.navigate('produtosAdicionados'); toggleModalRecursos() }}>
+                                    <Image source={require('../assets/vetorVerCards.png')} style={styles.imgRecursos} />
+                                    <Text style={styles.modalTextRecursos}>Ver Cards</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.botaoRecursos} onPress={() => { navigation.navigate('listasCriadas'); toggleModalRecursos() }}>
+                                    <Image source={require('../assets/vetorVerLista.png')} style={styles.imgRecursos} />
+                                    <Text style={styles.modalTextRecursos}>Ver Listas</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.botaoRecursos} onPress={toggleModalRecursos}>
+                                    <Image source={require('../assets/vetorLimparTudo.png')} style={styles.imgRecursos} />
+                                    <Text style={styles.modalTextRecursos}>Limpar Tudo</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    {/* botao adicionar */}
+                    <TouchableOpacity style={styles.botaoAdicionar} onPress={() => {
+                        if (valorAlvo === 'R$ ') {
+                            alert('Por favor, insira o valor alvo antes de adicionar um produto.');
+                        } else {
+                            setModalVisible(true);
+                        }
+                    }}>
+                        <Ionicons name="add-outline" style={[styles.iconePlus, { color: '#ED2D28' }]} />
+                        <Text style={styles.textBotaoAdd}>Adicionar produto</Text>
+                    </TouchableOpacity>
+
+                    {/* mensagem de nenhum produto adicionando */}
+                    {produtos.length === 0 && <Text style={styles.textNenhumProduto}>Nenhum produto adicionado</Text>}
+
+                    {/* modal infos produtos */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => {
+                            fecharModalInfos
+                        }}
+                        style={{ zIndex: 2 }}
+                    >
+                        <View style={styles.modalInfosProdutos}>
+                            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                            <TouchableOpacity onPress={fecharModalInfos}>
+                                <Ionicons name="close-circle-outline" style={[styles.iconePlus, { color: '#305BCC', marginLeft: '81%' }]} />
+                            </TouchableOpacity>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Nome"
+                                onChangeText={setNome}
+                                value={nome}
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Preço Unitário"
+                                keyboardType="numeric"
+                                onChangeText={setPrecoUnitario}
+                                value={precoUnitario}
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Quantidade"
+                                keyboardType="numeric"
+                                onChangeText={setQuantidade}
+                                value={quantidade}
+                            />
+                            <TouchableOpacity onPress={handleSalvar}>
+                                <Text style={styles.buttonText}>Adicionar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Modal>
+
+                    {/* exibição dos cards */}
+                    <View style={styles.tudo}>
+                        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollExibicao}>
+                            <View style={styles.produtosContainer}>
+                                {produtos.map((produto, index) => (
+                                    <View key={index} style={styles.containerProdutos}>
+                                        <Image source={imagemMap[produto.imagem]} style={styles.imgProdutos} />
+                                        <View style={styles.boxProdutos}>
+                                            <TouchableOpacity onPress={() => removerProduto(index)} style={{ backgroundColor: 'transparent' }}>
+                                                <Icon name="trash" size={25} color="red" style={{ marginBottom: 5 }} />
                                             </TouchableOpacity>
-                                            <Text style={styles.textQuantidade}>{produto.quantidade}</Text>
-                                            <TouchableOpacity onPress={() => incrementarQuantidade(index)} style={styles.circuloQuantidade}>
-                                                <Icon name="plus" size={20} color="white" />
-                                            </TouchableOpacity>
+                                            <Text style={styles.nomeProduto}>{produto.nome}</Text>
+                                            <Text style={styles.preco}>R$ {(produto.precoUnitario * produto.quantidade).toFixed(2)}</Text>
+                                            <View style={styles.boxQuantidade}>
+                                                <TouchableOpacity onPress={() => decrementarQuantidade(index)} style={styles.circuloQuantidade}>
+                                                    <Icon name="minus" size={20} color="white" />
+                                                </TouchableOpacity>
+                                                <Text style={styles.textQuantidade}>{produto.quantidade}</Text>
+                                                <TouchableOpacity onPress={() => incrementarQuantidade(index)} style={styles.circuloQuantidade}>
+                                                    <Icon name="plus" size={20} color="white" />
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
                                     </View>
-                                </View>
-                            ))}
-                        </View>
-                    </ScrollView>
-                </View>
+                                ))}
+                            </View>
+                        </ScrollView>
+                    </View>
 
-                {/* gastos */}
-                <View style={styles.containerGastos}>
-                    <Text style={styles.textGastos}>Gastos - </Text>
-                    <Text style={[
-                        styles.textGastos,
-                        valorTotal > parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && { color: '#ED2D28' },
-                        valorTotal == parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && { color: '#67ff1e' },
-                    ]}>
-                        R$ {valorTotal.toFixed(2)}
+                    {/* gastos */}
+                    <View style={styles.containerGastos}>
+                        <Text style={styles.textGastos}>Gastos - </Text>
+                        <Text style={[
+                            styles.textGastos,
+                            valorTotal > parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && { color: '#ED2D28' },
+                            valorTotal == parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && { color: '#67ff1e' },
+                        ]}>
+                            R$ {valorTotal.toFixed(2)}
+                        </Text>
+                    </View>
+
+                    <Text style={[styles.textGastosValor, { color: textColor }]}>
+                        {mensagem}
+                        {valorTotal === parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && "Valor alcançado"}
                     </Text>
-                </View>
-
-                <Text style={[styles.textGastosValor, { color: textColor }]}>
-                    {mensagem}
-                    {valorTotal === parseFloat(valorAlvo.replace(/[^\d,]/g, '').replace(',', '.')) && "Valor alcançado"}
-                </Text>
-                <StatusBar style="auto" />
-            </Animatable.View>
-        </ScrollView>
+                    <StatusBar style="auto" />
+                </Animatable.View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
