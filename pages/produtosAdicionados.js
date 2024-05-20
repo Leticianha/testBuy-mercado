@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native'; // Adicionei TouchableOpacity para o ícone de voltar
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,11 +7,16 @@ import { Ionicons } from '@expo/vector-icons/';
 import { useNavigation } from '@react-navigation/native';
 
 export default function ProdutosAdicionados() {
-    const [produtos, setProdutos] = useState([]); // Adicionei useState aqui
+    const [produtos, setProdutos] = useState([]);
     const navigation = useNavigation();
-
     const route = useRoute();
     const { list } = route.params || {};
+
+    useEffect(() => {
+        if (list) {
+            setProdutos(list.produtos);
+        }
+    }, [list]);
 
     if (!list) {
         return (
@@ -25,6 +30,10 @@ export default function ProdutosAdicionados() {
         setProdutos([]);
     };
 
+    const valorTotal = produtos.reduce((total, produto) => {
+        return total + (produto.precoUnitario * produto.quantidade);
+    }, 0);
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <ScrollView style={styles.scrollView}>
@@ -34,7 +43,7 @@ export default function ProdutosAdicionados() {
                         <View style={styles.navegacaoHeader}>
                             <TouchableOpacity onPress={() => {
                                 navigation.navigate('index');
-                                limparProdutos(); // Limpa a lista de produtos ao voltar para a tela principal
+                                limparProdutos();
                             }}>
                                 <Ionicons name="chevron-back" size={35} style={styles.icon} />
                             </TouchableOpacity>
@@ -47,7 +56,7 @@ export default function ProdutosAdicionados() {
 
                     <Text style={styles.listName}>{list.nomeLista}</Text>
                     <ScrollView>
-                        {list.produtos.map((produto, index) => (
+                        {produtos.map((produto, index) => (
                             <View key={index} style={styles.productCard}>
                                 <View style={styles.imageContainer}>
                                     <Image
@@ -70,13 +79,16 @@ export default function ProdutosAdicionados() {
                             </View>
                         ))}
                     </ScrollView>
+                    <View style={styles.totalContainer}>
+                        <Text style={styles.totalLabel}>Valor Total:</Text>
+                        <Text style={styles.totalValue}>R$ {valorTotal.toFixed(2)}</Text>
+                    </View>
                 </Animatable.View>
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-// Função para obter a imagem do diretório assets
 function getImageSource(imageName) {
     let source = null;
     switch (imageName) {
@@ -86,9 +98,8 @@ function getImageSource(imageName) {
         case 'img2.png':
             source = require('../assets/img2.png');
             break;
-        // Adicione mais cases conforme necessário para suas imagens
         default:
-            source = require('../assets/img3.png'); // Imagem padrão caso a imagem não seja encontrada
+            source = require('../assets/img3.png');
             break;
     }
     return source;
@@ -101,18 +112,17 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        margin: 40
+        margin: 40,
     },
-    // header
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginLeft: -10,
-        marginBottom: 50
+        marginBottom: 50,
     },
     navegacaoHeader: {
-        flexDirection: 'row'
+        flexDirection: 'row',
     },
     titleHeader: {
         fontFamily: 'Raleway-SemiBold',
@@ -135,7 +145,7 @@ const styles = StyleSheet.create({
     listName: {
         fontFamily: 'Raleway',
         fontSize: 18,
-        marginBottom: 15
+        marginBottom: 15,
     },
     productCard: {
         backgroundColor: '#FFFFFF',
@@ -147,32 +157,40 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 2,
-        elevation: 5, 
-        marginBottom: 30
+        elevation: 5,
+        marginBottom: 30,
     },
     productImage: {
         width: 120,
         height: 120,
         marginLeft: 10,
-        marginRight: 10
+        marginRight: 10,
     },
     productDetails: {
         flex: 1,
     },
     productName: {
         fontSize: 18,
-        fontFamily: 'Raleway'
+        fontFamily: 'Raleway',
     },
     quantidade: {
         fontFamily: 'Raleway',
-        fontSize: 14
+        fontSize: 14,
     },
     total: {
         fontFamily: 'Raleway-Bold',
         fontSize: 22,
     },
-    scrollView: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
+    totalContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    totalLabel: {
+        fontFamily: 'Raleway-SemiBold',
+        fontSize: 20,
+    },
+    totalValue: {
+        fontFamily: 'Raleway-Bold',
+        fontSize: 24,
     },
 });

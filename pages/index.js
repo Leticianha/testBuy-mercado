@@ -308,8 +308,6 @@ export default function Interface() {
         }
     };
 
-
-
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <ScrollView style={styles.scrollView}>
