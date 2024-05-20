@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, ScrollView, Text, View, Image, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, ScrollView, Text, View, Image, TextInput, TouchableOpacity, Modal, Alert, FlatList } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -26,13 +26,23 @@ export default function Interface() {
     const [confirmacaoVisible, setConfirmacaoVisible] = useState(false);
     const [limparTudoConfirmacaoVisible, setLimparTudoConfirmacaoVisible] = useState(false);
     const [produtoIndex, setProdutoIndex] = useState(null);
+    const [listName, setListName] = useState('');
+    const [saveListModalVisible, setSaveListModalVisible] = useState(false);
+    const [savedLists, setSavedLists] = useState([]);
+    const [showInstructionsAlert, setShowInstructionsAlert] = useState(true);
 
     // navegar entra as páginas
     const navigation = useNavigation()
 
     // fonte
     const [fontsLoaded, fontError] = useFonts({
-        'Raleway': require('../assets/fonts/Raleway-VariableFont_wght.ttf'),
+        'Raleway': require('../assets/fonts/Raleway-Regular.ttf'),
+        'Raleway-Black': require('../assets/fonts/Raleway-Black.ttf'),
+        'Raleway-Bold': require('../assets/fonts/Raleway-Bold.ttf'),
+        'Raleway-ExtraBold': require('../assets/fonts/Raleway-ExtraBold.ttf'),
+        'Raleway-Light': require('../assets/fonts/Raleway-Light.ttf'),
+        'Raleway-Medium': require('../assets/fonts/Raleway-Medium.ttf'),
+        'Raleway-SemiBold': require('../assets/fonts/Raleway-SemiBold.ttf'),
     });
 
     const onLayoutRootView = useCallback(async () => {
@@ -71,7 +81,7 @@ export default function Interface() {
         }
 
         const novoProduto = {
-            nome: nome.charAt(0).toUpperCase() + nome.slice(1),
+            nome: nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase(),
             precoUnitario: precoFloat,
             quantidade: quantidadeInt,
             imagem: `img${imgIndex}.png`,
@@ -92,10 +102,16 @@ export default function Interface() {
         setConfirmacaoVisible(!confirmacaoVisible);
     }
 
-    // atualize a função removerProduto para abrir o modal de confirmação antes de remover o produto
-    const removerProduto = (index) => {
+    const removerProdutoIndividual = (index) => {
         // Abre o modal de confirmação para excluir o produto
         confirmacao(index);
+    };
+
+    // atualize a função removerProduto para abrir o modal de confirmação antes de remover o produto
+    const removerProduto = (index) => {
+        const newProducts = [...produtos];
+        newProducts.splice(index, 1);
+        setProdutos(newProducts);
     };
 
 
@@ -159,9 +175,15 @@ export default function Interface() {
 
     // botão limpar tudo
     const limparTudo = () => {
-        // Abre o modal de confirmação para limpar todos os produtos
-        confirmacaoLimparTudo();
+        if (produtos.length === 0) {
+            // Exibe um alerta caso não haja nenhum produto na lista
+            Alert.alert('Atenção', 'Não há produtos para salvar.');
+        } else {
+            // Abre o modal de confirmação para limpar todos os produtos
+            confirmacaoLimparTudo();
+        }
     };
+
 
     // função para fechar o modal de confirmação para limpar todos os produtos
     const fecharModalLimparTudo = () => {
@@ -181,6 +203,112 @@ export default function Interface() {
             return name
         }
     }
+
+    const openSaveListModal = () => {
+        if (produtos.length === 0) {
+            Alert.alert('Atenção', 'Não há produtos para salvar.');
+        } else {
+            setSaveListModalVisible(true);
+        }
+    };
+
+    const closeSaveListModal = () => {
+        setSaveListModalVisible(false);
+        setListName('');
+    };
+
+    const saveList = () => {
+        if (listName.trim() === '') {
+            Alert.alert('Atenção', 'Por favor, digite o nome da lista.');
+            return;
+        }
+        if (produtos.length === 0) {
+            Alert.alert('Atenção', 'Não há produtos para salvar.');
+            return;
+        }
+
+        // Verifica se já existe uma lista com o mesmo nome
+        const existingList = savedLists.find(list => list.nomeLista === listName.trim());
+        if (existingList) {
+            Alert.alert(
+                'Atenção',
+                'Já existe uma lista salva com esse nome. Deseja acrescentar os novos produtos nessa lista?',
+                [
+                    {
+                        text: 'Sim',
+                        onPress: () => {
+                            // Adicionar os produtos à lista existente
+                            const updatedList = savedLists.map(list => {
+                                if (list.nomeLista === listName.trim()) {
+                                    return {
+                                        ...list,
+                                        produtos: [...list.produtos, ...produtos]
+                                    };
+                                }
+                                return list;
+                            });
+                            setSavedLists(updatedList);
+
+                            Alert.alert('Sucesso', 'Produtos acrescentados com sucesso!', [
+                                {
+                                    text: 'OK',
+                                    onPress: () => {
+                                        closeSaveListModal();
+                                        navigation.navigate('listasCriadas', { savedLists: updatedList }); // Navegar para a tela de listas criadas com as listas atualizadas
+                                    }
+                                }
+                            ]);
+                        }
+                    },
+                    {
+                        text: 'Não',
+                        onPress: () => {
+                            // Não fazer nada, apenas fechar o modal
+                            closeSaveListModal();
+                        },
+                        style: 'cancel'
+                    }
+                ]
+            );
+            return;
+        }
+
+        // Cria um objeto com a lista de produtos e o nome da lista
+        const listaSalva = {
+            nomeLista: listName,
+            produtos: [...produtos]
+        };
+
+        // Atualiza o estado de listas salvas
+        setSavedLists([...savedLists, listaSalva]);
+
+        // Limpa a lista de produtos
+        setProdutos([]);
+
+        // Exibe um alerta de sucesso e navega para a tela de listas salvas
+        Alert.alert('Sucesso', 'Lista salva com sucesso!', [
+            {
+                text: 'OK',
+                onPress: () => {
+                    closeSaveListModal();
+                    navigation.navigate('listasCriadas', { savedLists: [...savedLists, listaSalva] }); // Navegar para a tela de listas criadas com as listas salvas
+                }
+            }
+        ]);
+
+        console.log('Lista Salva:', listaSalva);
+    };
+
+
+    const handleViewCards = () => {
+        if (savedLists.length === 0) {
+            Alert.alert('Atenção', 'Não há listas salvas. Salve uma lista para visualizá-las.');
+        } else {
+            navigation.navigate('listasCriadas', { savedLists });
+        }
+    };
+
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -216,38 +344,37 @@ export default function Interface() {
 
                         if (valorAlvo === 'R$ ') {
                             // Verifica se o campo está vazio
-                            alert('Por favor, insira o valor alvo antes de adicionar um produto.');
+                            Alert.alert('Atenção', 'Por favor, insira o valor alvo antes de adicionar um produto.');
+
                         } else if (isNaN(valorAlvoFloat) || valorAlvoFloat <= 0) {
                             // Verifica se o valor não é um número válido ou é menor ou igual a zero
-                            alert('Por favor, insira um valor alvo válido.');
+                            Alert.alert('Atenção', 'Por favor, insira um valor alvo válido.');
+
                         } else {
                             // Se tudo estiver correto, exibe o modal
                             setModalVisible(true);
                         }
-
 
                     }}>
                         <Ionicons name="add-outline" style={[styles.iconePlus, { color: '#F6282A' }]} />
                         <Text style={styles.textBotaoAdd}>Adicionar produto</Text>
                     </TouchableOpacity>
 
-                    {/* botao de ver cards adicionados */}
-                    <TouchableOpacity style={styles.botaoVerCards} onPress={() => navigation.navigate('produtosAdicionados')}>
-                        <Text style={styles.textVerCards}>Ver cards</Text>
+                    {/* Ver listas button */}
+                    <TouchableOpacity onPress={handleViewCards}>
+                        <Text style={styles.textVerCards}>Ver listas</Text>
                     </TouchableOpacity>
 
                     {/* mensagem de nenhum produto adicionando */}
                     {produtos.length === 0 && <Text style={styles.textNenhumProduto}>Nenhum produto adicionado</Text>}
 
                     {/* exibição dos cards */}
-                    <View style={styles.tudo}>
                         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollExibicao}>
-                            <View style={styles.produtosContainer}>
                                 {produtos.map((produto, index) => (
-                                    <View key={index} style={styles.containerProdutos}>
+                                    <Animatable.View delay={100} animation='fadeInUp' key={index} style={styles.containerProdutos}>
                                         <Image source={imagemMap[produto.imagem]} style={styles.imgProdutos} />
                                         <View style={styles.boxProdutos}>
-                                            <TouchableOpacity onPress={() => removerProduto(index)} style={{ backgroundColor: 'transparent' }}>
+                                            <TouchableOpacity onPress={() => removerProdutoIndividual(index)} style={{ backgroundColor: 'transparent' }}>
                                                 <Image source={require('../assets/iconeLixeira.png')} style={styles.icone} />
                                             </TouchableOpacity>
                                             <Text style={styles.nomeProduto}>{reticencias(produto.nome)}</Text>
@@ -262,18 +389,18 @@ export default function Interface() {
                                                 </TouchableOpacity>
                                             </View>
                                         </View>
-                                    </View>
+                                    </Animatable.View>
                                 ))}
-                            </View>
                         </ScrollView>
-                    </View>
+
 
                     {/* botões salvar lista e limpar tudo */}
                     <View style={styles.containerRecursos}>
-                        <TouchableOpacity style={styles.botaoRecursos}>
+                        <TouchableOpacity style={styles.botaoRecursos} onPress={openSaveListModal}>
                             <Image source={require('../assets/vetorSalvarCards.png')} style={styles.imgRecursos} />
                             <Text style={styles.textRecursos}>Salvar Cards</Text>
                         </TouchableOpacity>
+
                         <TouchableOpacity style={styles.botaoRecursos} onPress={limparTudo}>
                             <Image source={require('../assets/vetorLimparTudo.png')} style={styles.imgRecursos} />
                             <Text style={styles.textRecursos}>Limpar Tudo</Text>
@@ -307,39 +434,125 @@ export default function Interface() {
                         }}
                         style={{ zIndex: 2 }}
                     >
-                        <View style={styles.modalInfosProdutos}>
-                            <View style={styles.modalHeader}>
-                                <TouchableOpacity onPress={fecharModalInfos}>
-                                    <Ionicons name="close-circle-outline" style={[styles.iconePlus, { color: '#FFFFFF', }]} />
-                                </TouchableOpacity>
-                                <Text style={styles.textHeaderModal}>Informações do produto</Text>
+                        <ScrollView style={{ minHeight: 100 }}>
+                            <View style={{ backgroundColor: '#0000004a', flex: 1, }}>
+
+                                <View style={styles.boxModalInfos}>
+                                    <TouchableOpacity onPress={fecharModalInfos} style={{ width: '15%', marginLeft: 20, marginTop: 20, }}>
+                                        <Ionicons name="close-circle-outline" style={[styles.iconePlus, { color: '#FFFFFF', }]} />
+                                    </TouchableOpacity>
+
+                                    <View style={styles.boxTextHeaderModal}>
+                                        <Text style={styles.textHeaderModal}>Informações do produto</Text>
+                                    </View>
+
+                                    <View style={styles.containerModalInfos}>
+
+                                        <View style={styles.boxImagemModalInfos}>
+                                            <Image source={require('../assets/imgModalInfos.png')} style={styles.imgModalnfos} />
+                                        </View>
+
+                                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+                                        <View style={styles.boxTextInputInfos}>
+
+                                            <Text style={styles.TextInputInfos}>Nome</Text>
+
+                                            <View style={styles.inputContainer}>
+                                                <Ionicons name="cart" size={25} style={styles.icon} />
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="Nome do produto"
+                                                    onChangeText={setNome}
+                                                    value={nome}
+                                                />
+                                            </View>
+
+                                            <Text style={styles.TextInputInfos}>Preço Unitário</Text>
+
+                                            <View style={styles.inputContainer}>
+                                                <Ionicons name="cash" size={25} style={styles.icon} />
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="Preço Unitário"
+                                                    keyboardType="numeric"
+                                                    onChangeText={setPrecoUnitario}
+                                                    value={precoUnitario}
+                                                />
+                                            </View>
+
+                                            <Text style={styles.TextInputInfos}>Quantidade</Text>
+
+                                            <View style={styles.inputContainer}>
+                                                <Ionicons name="add" size={25} style={styles.icon} />
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="Quantidade"
+                                                    keyboardType="numeric"
+                                                    onChangeText={setQuantidade}
+                                                    value={quantidade}
+                                                />
+                                            </View>
+
+                                        </View>
+
+                                        <View style={styles.boxBotaoInfos}>
+                                            <TouchableOpacity onPress={handleSalvar}>
+                                                <Text style={styles.buttonText}>Adicionar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+
+                                    </View>
+                                </View>
+
                             </View>
-                            <View style={styles.containerModalInfos}>
-                                <Image source={require('../assets/imgModalInfos.png')} style={styles.imgModalnfos} />
-                                {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Nome"
-                                    onChangeText={setNome}
-                                    value={nome}
-                                />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Preço Unitário"
-                                    keyboardType="numeric"
-                                    onChangeText={setPrecoUnitario}
-                                    value={precoUnitario}
-                                />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Quantidade"
-                                    keyboardType="numeric"
-                                    onChangeText={setQuantidade}
-                                    value={quantidade}
-                                />
-                                <TouchableOpacity onPress={handleSalvar}>
-                                    <Text style={styles.buttonText}>Adicionar</Text>
-                                </TouchableOpacity>
+                        </ScrollView>
+                    </Modal>
+
+                    {/* Modal de salvar lista */}
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={saveListModalVisible}
+                        onRequestClose={closeSaveListModal}
+                    >
+                        <View style={{ backgroundColor: '#0000004a', flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={styles.containerModalSalvar}>
+                                <View style={styles.centralizarSalvar}>
+                                    <View style={styles.headerModalSalvar}>
+                                        <Image source={require('../assets/vetorSalvarCardsAzul.png')} style={styles.imgHeaderModalSalvar} />
+                                        <Text style={styles.textHeaderModalSalvar}>Salvar Cards</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.boxImgSalvar}>
+                                    <Image source={require('../assets/imgModalSalvar.png')} style={styles.imgModalSalvar} />
+                                </View>
+                                <View style={styles.textLista}>
+                                    <Text style={styles.textSalvarModal}>Lista:</Text>
+                                </View>
+                                <View style={styles.inputModalSalvar}>
+                                    <Ionicons name="clipboard" size={25} style={styles.iconLista} />
+                                    <TextInput
+                                        style={styles.inputSalvar}
+                                        onChangeText={text => setListName(text)}
+                                        value={listName}
+                                        placeholder="Digite o nome da lista"
+                                    />
+                                </View>
+                                <View style={styles.botoesModalSalvar}>
+                                    <TouchableOpacity
+                                        style={[styles.botaoModalSalvar, { backgroundColor: '#305BCC' }]}
+                                        onPress={saveList}
+                                    >
+                                        <Text style={styles.botaoTextSalvarModal}>Salvar</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.botaoModalSalvar, { backgroundColor: '#F6282A' }]}
+                                        onPress={closeSaveListModal}
+                                    >
+                                        <Text style={styles.botaoTextSalvarModal}>Cancelar</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     </Modal>
@@ -401,7 +614,6 @@ export default function Interface() {
                         </View>
                     </Modal>
 
-
                     <StatusBar style="auto" />
                 </Animatable.View>
             </ScrollView>
@@ -427,8 +639,7 @@ const styles = StyleSheet.create({
         marginRight: 40
     },
     usuario: {
-        fontFamily: 'Raleway',
-        fontWeight: '700',
+        fontFamily: 'Raleway-SemiBold',
         fontSize: 22,
     },
     logoContainer: {
@@ -447,9 +658,8 @@ const styles = StyleSheet.create({
     },
     // valor alvo
     textValorAlvo: {
-        fontFamily: 'Raleway',
-        fontWeight: '500',
-        fontSize: 20,
+        fontFamily: 'Raleway-Medium',
+        fontSize: 18,
         marginTop: 30,
         marginBottom: 15,
     },
@@ -464,30 +674,26 @@ const styles = StyleSheet.create({
         fontFamily: 'Raleway',
         color: '#FFFFFF',
         fontSize: 18,
-        fontWeight: '400',
         marginBottom: 10
     },
     inputValorAlvo: {
         backgroundColor: '#6F8DDB',
         borderRadius: 15,
         padding: 10,
-        fontFamily: 'Raleway',
+        fontFamily: 'Raleway-Medium',
         fontSize: 20,
-        fontWeight: '500',
         color: '#FFFFFF'
     },
     // cards
     textCards: {
-        fontFamily: 'Raleway',
-        fontWeight: '500',
-        fontSize: 20,
+        fontFamily: 'Raleway-Medium',
+        fontSize: 18,
         marginBottom: 15,
     },
     // botão ver cards adicionados 
     textVerCards: {
         fontFamily: 'Raleway',
-        fontWeight: '600',
-        fontSize: 16,
+        fontSize: 18,
         color: '#305BCC',
         marginBottom: 10
     },
@@ -509,7 +715,6 @@ const styles = StyleSheet.create({
     textRecursos: {
         fontFamily: 'Raleway',
         fontSize: 16,
-        fontWeight: '600',
         color: '#F6282A'
     },
     imgRecursos: {
@@ -539,19 +744,17 @@ const styles = StyleSheet.create({
     iconePlus: {
         marginRight: 10,
         marginBottom: 2,
-        fontSize: 35
+        fontSize: 40
     },
     textBotaoAdd: {
-        fontFamily: 'Raleway',
-        fontWeight: '600',
+        fontFamily: 'Raleway-Medium',
         fontSize: 18,
         color: '#305BCC'
     },
     // nenhum produto adicionado
     textNenhumProduto: {
-        fontFamily: 'Raleway',
-        fontSize: 18,
-        fontWeight: '600',
+        fontFamily: 'Raleway-SemiBold',
+        fontSize: 16,
         color: '#F6282A',
         textAlign: 'center',
         marginRight: 40,
@@ -559,7 +762,6 @@ const styles = StyleSheet.create({
     },
     // modal infos produtos
     modalInfosProdutos: {
-        backgroundColor: '#F5F5F5',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -569,55 +771,92 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
-    modalHeader: {
-        padding: 20,
+    boxModalInfos: {
         backgroundColor: '#305BCC',
+        width: '100%',
+        borderRadius: 20
+    },
+    boxTextHeaderModal: {
+        marginBottom: 30,
+        alignItems: 'center',
     },
     textHeaderModal: {
+        fontFamily: 'Raleway-Bold',
+        fontSize: 22,
         color: '#FFFFFF',
-        fontSize: 20,
-        textAlign: 'center',
-        fontFamily: 'Raleway',
-        fontWeight: '700',
-        marginBottom: 5
+        width: '50%',
+        textAlign: 'center'
     },
     containerModalInfos: {
-        backgroundColor: 'yellow',
-        borderTopStartRadius: 150
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
+        width: '100%',
+        padding: 35,
+    },
+    boxImagemModalInfos: {
+        alignItems: 'center'
     },
     imgModalnfos: {
         width: 200,
-        height: 250
+        height: 190,
     },
     errorText: {
+        fontFamily: 'Raleway-SemiBold',
+        fontSize: 16,
+        textAlign: 'center',
         color: '#F6282A',
-        textAlign: 'center',
-        fontFamily: 'Raleway',
-        fontWeight: '600',
-        fontSize: 16
+        marginBottom: 10,
+        marginTop: 10
     },
-    // exibição dos cards
-    tudo: {
-        textAlign: 'center',
-        alignItems: 'center',
-        minHeight: 10,
+    TextInputInfos: {
+        fontFamily: 'Raleway-SemiBold',
+        fontSize: 18,
+        marginBottom: 10,
     },
-    produtosContainer: {
-        paddingBottom: 10,
+    inputContainer: {
         flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E6E6E6',
+        borderRadius: 10,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    icon: {
+        marginRight: 10,
+        color: '#F6282A',
+    },
+    input: {
+        flex: 1,
+        padding: 10,
+        backgroundColor: '#E6E6E6',
         borderRadius: 10,
     },
+    boxBotaoInfos: {
+        alignItems: 'center',
+        marginTop: 15
+    },
+    buttonText: {
+        backgroundColor: '#305BCC',
+        color: '#FFFFFF',
+        fontFamily: 'Raleway-ExtraBold',
+        fontSize: 24,
+        paddingLeft: 40,
+        paddingRight: 40,
+        paddingTop: 10,
+        paddingBottom: 10,
+        textAlign: 'center',
+        borderRadius: 20,
+    },
+    // exibição dos cards
     containerProdutos: {
-        marginRight: 40,
-        alignItems: 'center'
+        marginHorizontal: 10,
+        alignItems: 'center',
     },
     boxProdutos: {
         backgroundColor: '#FFFFFF',
         marginTop: -35,
-        paddingTop: 20,
-        paddingRight: 20,
-        paddingLeft: 20,
-        paddingBottom: 20,
+        padding: 20,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
         shadowColor: '#305BCC',
@@ -638,14 +877,13 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35,
         marginLeft: -15,
-        marginTop: -5
     },
     nomeProduto: {
         fontFamily: 'Raleway',
         fontWeight: '700',
         fontSize: 18,
         marginBottom: 0,
-        marginLeft: 25
+        marginLeft: 25,
     },
     preco: {
         fontFamily: 'Raleway',
@@ -663,7 +901,7 @@ const styles = StyleSheet.create({
         padding: 5,
         alignSelf: 'center',
         marginTop: 5,
-        marginLeft: '6%'
+        marginLeft: '6%',
     },
     circuloQuantidade: {
         width: 30,
@@ -672,13 +910,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#F6282A',
         justifyContent: 'center',
         alignItems: 'center',
-        marginHorizontal: 5
+        marginHorizontal: 5,
     },
     textQuantidade: {
         fontFamily: 'Raleway',
         fontWeight: '600',
         fontSize: 16,
-        color: '#FFFFFF'
+        color: '#FFFFFF',
     },
     // gastos
     containerGastos: {
@@ -691,14 +929,12 @@ const styles = StyleSheet.create({
         marginTop: 40
     },
     textGastos: {
-        fontFamily: 'Raleway',
-        fontWeight: '600',
+        fontFamily: 'Raleway-SemiBold',
         fontSize: 20,
         color: '#FFFFFF',
     },
     textGastosValor: {
-        fontFamily: 'Raleway',
-        fontWeight: '600',
+        fontFamily: 'Raleway-SemiBold',
         fontSize: 16,
         textAlign: 'center',
         marginRight: 50,
@@ -725,7 +961,7 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     confirmacaoText: {
-        fontFamily: 'Raleway',
+        fontFamily: 'Raleway-Medium',
         fontSize: 18,
         marginBottom: 20,
         textAlign: 'center',
@@ -741,10 +977,93 @@ const styles = StyleSheet.create({
         marginHorizontal: 5,
     },
     botaoConfirmacaoText: {
-        fontFamily: 'Raleway',
+        fontFamily: 'Raleway-SemiBold',
         fontSize: 16,
-        fontWeight: '600',
         color: '#FFFFFF',
         textAlign: 'center',
     },
+    // modal salvar
+    containerModalSalvar: {
+        backgroundColor: '#FFFFFF',
+        paddingLeft: 50,
+        paddingRight: 50,
+        paddingTop: 30,
+        paddingBottom: 30,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    centralizarSalvar: {
+        alignItems: 'center'
+    },
+    headerModalSalvar: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    imgHeaderModalSalvar: {
+        width: 35,
+        height: 35,
+        marginRight: 10
+    },
+    textHeaderModalSalvar: {
+        fontFamily: 'Raleway-SemiBold',
+        fontSize: 22,
+        color: '#305BCC'
+    },
+    boxImgSalvar: {
+        alignItems: 'center'
+    },
+    imgModalSalvar: {
+        width: 200,
+        height: 180,
+        marginBottom: 10
+    },
+    textLista: {
+    },
+    textSalvarModal: {
+        fontFamily: 'Raleway-Medium',
+        fontSize: 18,
+        marginBottom: 10,
+    },
+    inputModalSalvar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E6E6E6',
+        borderRadius: 20,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    iconLista: {
+        color: '#F6282A',
+    },
+    inputSalvar: {
+        padding: 15,
+        paddingRight: 30,
+        paddingLeft: 5,
+        backgroundColor: '#E6E6E6',
+        borderRadius: 15,
+    },
+    botoesModalSalvar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10
+    },
+    botaoModalSalvar: {
+        borderRadius: 15,
+        width: 111,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    botaoTextSalvarModal: {
+        color: '#FFFFFF',
+        fontFamily: 'Raleway-Medium',
+        fontSize: 18
+    }
 });
