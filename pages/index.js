@@ -367,29 +367,31 @@ export default function Interface() {
                     {produtos.length === 0 && <Text style={styles.textNenhumProduto}>Nenhum produto adicionado</Text>}
 
                     {/* exibição dos cards */}
+                    <View style={styles.tudo}>
                         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollExibicao}>
-                                {produtos.map((produto, index) => (
-                                    <Animatable.View delay={100} animation='fadeInUp' key={index} style={styles.containerProdutos}>
-                                        <Image source={imagemMap[produto.imagem]} style={styles.imgProdutos} />
-                                        <View style={styles.boxProdutos}>
-                                            <TouchableOpacity onPress={() => removerProdutoIndividual(index)} style={{ backgroundColor: 'transparent' }}>
-                                                <Image source={require('../assets/iconeLixeira.png')} style={styles.icone} />
+                            {produtos.map((produto, index) => (
+                                <Animatable.View delay={100} animation='fadeInUp' key={index} style={styles.containerProdutos}>
+                                    <Image source={imagemMap[produto.imagem]} style={styles.imgProdutos} />
+                                    <View style={styles.boxProdutos}>
+                                        <TouchableOpacity onPress={() => removerProdutoIndividual(index)} style={{ backgroundColor: 'transparent' }}>
+                                            <Image source={require('../assets/iconeLixeira.png')} style={styles.icone} />
+                                        </TouchableOpacity>
+                                        <Text style={styles.nomeProduto}>{reticencias(produto.nome)}</Text>
+                                        <Text style={styles.preco}>R$ {(produto.precoUnitario * produto.quantidade).toFixed(2)}</Text>
+                                        <View style={styles.boxQuantidade}>
+                                            <TouchableOpacity onPress={() => decrementarQuantidade(index)} style={styles.circuloQuantidade}>
+                                                <Icon name="minus" size={20} color="#FFFFFF" />
                                             </TouchableOpacity>
-                                            <Text style={styles.nomeProduto}>{reticencias(produto.nome)}</Text>
-                                            <Text style={styles.preco}>R$ {(produto.precoUnitario * produto.quantidade).toFixed(2)}</Text>
-                                            <View style={styles.boxQuantidade}>
-                                                <TouchableOpacity onPress={() => decrementarQuantidade(index)} style={styles.circuloQuantidade}>
-                                                    <Icon name="minus" size={20} color="#FFFFFF" />
-                                                </TouchableOpacity>
-                                                <Text style={styles.textQuantidade}>{produto.quantidade}</Text>
-                                                <TouchableOpacity onPress={() => incrementarQuantidade(index)} style={styles.circuloQuantidade}>
-                                                    <Icon name="plus" size={20} color="#FFFFFF" />
-                                                </TouchableOpacity>
-                                            </View>
+                                            <Text style={styles.textQuantidade}>{produto.quantidade}</Text>
+                                            <TouchableOpacity onPress={() => incrementarQuantidade(index)} style={styles.circuloQuantidade}>
+                                                <Icon name="plus" size={20} color="#FFFFFF" />
+                                            </TouchableOpacity>
                                         </View>
-                                    </Animatable.View>
-                                ))}
+                                    </View>
+                                </Animatable.View>
+                            ))}
                         </ScrollView>
+                    </View>
 
 
                     {/* botões salvar lista e limpar tudo */}
@@ -846,10 +848,21 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         borderRadius: 20,
     },
-    // exibição dos cards
+     // exibição dos cards
+     tudo: {
+        flex: 1,
+        alignItems: 'center'
+    },
+    scrollExibicao: {
+        flexDirection: 'row',
+        paddingHorizontal: 0,
+    },
+    // 674.48
     containerProdutos: {
-        marginHorizontal: 10,
+        marginRight: 3, // Ajuste para espaçamento horizontal entre os produtos
+        padding: 10,
         alignItems: 'center',
+        width: 200, // Defina a largura fixa dos itens para garantir que eles não sejam cortados
     },
     boxProdutos: {
         backgroundColor: '#FFFFFF',

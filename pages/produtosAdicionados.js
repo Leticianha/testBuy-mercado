@@ -36,7 +36,7 @@ export default function ProdutosAdicionados() {
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 100 }}>
                 <Animatable.View delay={600} animation='fadeInUp' style={styles.container}>
                     {/* header */}
                     <View style={styles.header}>
@@ -79,12 +79,11 @@ export default function ProdutosAdicionados() {
                             </View>
                         ))}
                     </ScrollView>
-                    <View style={styles.totalContainer}>
-                        <Text style={styles.totalLabel}>Valor Total:</Text>
-                        <Text style={styles.totalValue}>R$ {valorTotal.toFixed(2)}</Text>
-                    </View>
                 </Animatable.View>
             </ScrollView>
+            <View style={styles.totalContainer}>
+                <Text style={styles.totalLabel}>Gastos: R$ {valorTotal.toFixed(2)}</Text>
+            </View>
         </SafeAreaView>
     );
 }
@@ -113,13 +112,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         margin: 40,
+        marginBottom: 10
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginLeft: -10,
         marginBottom: 50,
+        marginLeft: -10
     },
     navegacaoHeader: {
         flexDirection: 'row',
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     listName: {
         fontFamily: 'Raleway',
         fontSize: 18,
-        marginBottom: 15,
+        marginBottom: 10,
     },
     productCard: {
         backgroundColor: '#FFFFFF',
@@ -158,7 +158,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 2,
         elevation: 5,
-        marginBottom: 30,
+        marginBottom: 5,
+        marginTop: 40
     },
     productImage: {
         width: 120,
@@ -182,15 +183,18 @@ const styles = StyleSheet.create({
         fontSize: 22,
     },
     totalContainer: {
-        marginTop: 20,
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
         alignItems: 'center',
+        backgroundColor: '#305BCC',
+        padding: 20,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
     },
     totalLabel: {
         fontFamily: 'Raleway-SemiBold',
-        fontSize: 20,
-    },
-    totalValue: {
-        fontFamily: 'Raleway-Bold',
-        fontSize: 24,
+        fontSize: 22,
+        color: '#FFFFFF'
     },
 });
